@@ -1,20 +1,23 @@
 package com.bugtracker.the_bugtracker.Services;
 
+import com.bugtracker.the_bugtracker.Configs.SecurityUser;
 import com.bugtracker.the_bugtracker.Configs.UserNotFoundException;
-import com.bugtracker.the_bugtracker.Models.Activity;
-import com.bugtracker.the_bugtracker.Models.Bug;
-import com.bugtracker.the_bugtracker.Models.Platforms;
-import com.bugtracker.the_bugtracker.Models.User;
+import com.bugtracker.the_bugtracker.Enums.Action;
+import com.bugtracker.the_bugtracker.Enums.Severity;
+import com.bugtracker.the_bugtracker.Models.*;
 import com.bugtracker.the_bugtracker.Repositories.ActivityRepository;
 import com.bugtracker.the_bugtracker.Repositories.BugRepository;
+import com.bugtracker.the_bugtracker.Repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import java.security.Principal;
 import java.time.LocalDate;
 import java.util.Date;
 import java.util.List;
@@ -30,20 +33,20 @@ public class BugService {
     @Autowired
     ActivityRepository activityRepository;
 
+    @Autowired
+    UserRepository userRepository;
+
 
     //LIST ALL BUGS
     public List<Bug> bugList(){
         return bugRepository.findAll();
     }
 
-    //LIST JUST THE BUG NAMES
-    public List<Bug> justBugs(){
-        return bugRepository.justBugs();
-    }
-
+//
     public String[] findBugNames(){
         return getStrings();
     }
+
 
     private String[] getStrings() {
         List<Bug> bugNames = bugRepository.findAll();
@@ -54,6 +57,7 @@ public class BugService {
         return theNames;
     }
 
+
     public String[] findBugReviews(){
         return getStrings();
     }
@@ -63,21 +67,33 @@ public class BugService {
         return bugRepository.findAll(pageable);
     }
 
+
+
+    public String getSignedInUsername(@AuthenticationPrincipal SecurityUser userDetails){
+        String userEmail = userDetails.getUsername();
+        User user = userRepository.getByEmail(userEmail);
+        return user.getFirstName() + " "+ user.getLastName();
+    }
+
+
     //CREATE BUG
     public void create(Bug bug){
+
         Bug buggy = bugRepository.save(bug);
+
         //todo insert a new activity
         Activity activity = new Activity(
-                String.format("Bug created by %s with description %s",buggy.getLabel(),
-                        buggy.getBugReview()),
-                buggy.getLabel(),
+                String.format("Bug created by %s with description %s",buggy.getCreatedBy(), buggy.getBugReview()),
+                buggy.getCreatedBy(),
                 buggy.getReportDate(),
-//                String.format("Bug created with description %s on the %s platform(s)", buggy.getBugReview(), buggy.getPlatformses()),
                 buggy.getApprovedBy(),
                 buggy.getApprovedDate(),
                 buggy.getAssignedTo(),
                 buggy.getBugTreatmentStage(),
                 buggy.getProgressStatus());
+
+        activity.setAction(Action.BUG_CREATION);
+        buggy.setEnumSeverity(Severity.LOW);
         activityRepository.save(activity);
 
     }
@@ -113,23 +129,33 @@ public class BugService {
 
         System.out.println(bug.getLabel());
         Activity deleteActivity = new Activity(String.format
-                ("Bug with Id %d with description %s initiated by %s, deleted", id ,bug.getBugReview(),
-                        bug.getLabel()), "DELETED", new Date(), bug.getLabel());
-        activityRepository.save(deleteActivity);
+                ("Bug with Id %d with description %s initiated by %s, deleted", id ,bug.getBugReview(), bug.getCreatedBy()),
+                "DELETED",
+                new Date());
 
+        deleteActivity.setAction(Action.BUG_DELETION);
+        activityRepository.save(deleteActivity);
     }
+
 
     //UPDATE BUG INFORMATION
     public ResponseEntity<Bug> updateBug(Bug bug) {
-        return new ResponseEntity<>( bugRepository.save(bug),HttpStatus.ACCEPTED);
+        return new ResponseEntity<>(bugRepository.save(bug),HttpStatus.ACCEPTED);
     }
+
 
     //UPDATE BUG REST CONTROLLER
     @Transactional
     public void updateBugRestController(
-            Integer bugId, String bugName, String severity, String bugReview,
-            String treatmentStage, Platforms platforms, String progressStatus,
-            User userAssignedToBug){
+            Integer bugId,
+            String bugName,
+            String severity,
+            String bugReview,
+            String treatmentStage,
+            Platforms platforms,
+            String progressStatus,
+            User userAssignedToBug,
+            Severity enumSeverity){
 
         Bug existingBug =
                 bugRepository.findById(bugId).orElseThrow(()->new IllegalStateException(
@@ -144,8 +170,10 @@ public class BugService {
         existingBug.setProgressStatus(progressStatus);
         existingBug.setUserAssignedToBug(userAssignedToBug);
         existingBug.setAssignedDate(String.valueOf(LocalDate.now()));
+        existingBug.setEnumSeverity(enumSeverity);
 
     }
+
 
     //GET BUGS ASSIGNED T0 USER
     public List<Bug> getBugByUserId(int userId){

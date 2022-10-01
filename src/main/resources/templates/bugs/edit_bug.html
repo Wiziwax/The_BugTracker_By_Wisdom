@@ -59,7 +59,7 @@
                   <form th:action="@{/bug/{id} (id=${bug.bugId})}" th:object="${bug}" method="POST">
                       <div class="form-group">
                           <label>UserName</label>
-                          <input class="form-control" type="text" name="BugName" th:field="${bug.bugName}"
+                          <input class="form-control" type="text" name="BugName" th:field="${bug.label}"
                                  placeholder="Enter email" />
                       </div>
 

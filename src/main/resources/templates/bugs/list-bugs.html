@@ -88,10 +88,10 @@
         </tr>
         </thead>
         <tbody>
-        <tr th:each="aBug : ${listBugs}">
+        <tr th:each="aBug : ${bugs}">
 
             <td th:text="${aBug.bugId}"></td>
-            <td th:text="${aBug.bugName}"></td>
+            <td th:text="${aBug.label}"></td>
             <td th:text="${aBug.bugReview}" ></td>
             <td th:text="${aBug.reportDate}"></td>
             <td th:text="${aBug.platformses}"></td>
@@ -104,11 +104,11 @@
             <td>
                 <a class="fas fa-edit fa-2x icon-green"
                    th:href="@{/bug/edit/{id}(id=${aBug.bugId})}"
-                   title="Edit this user"></a>
-                &nbsp;
+                   title="Edit this bug"></a>
+
                 <a class="fas fa-trash fa-2x icon-dark link-delete"
                    th:href="@{/bug/delete/{id}(id=${aBug.bugId})}"
-                   title="Delete this user"></a>
+                   title="Delete this bug"></a>
             </td>
 
 

@@ -28,6 +28,10 @@ public interface UserRepository extends CrudRepository<User, Integer> {
     public List<User> userRoleList(int roleId);
 
     Optional<User> findUserByEmail(String email);
+
+    List<User> findByEmail(String email);
+
+    User getByEmail(String userEmail);
 }
 
 

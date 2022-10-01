@@ -15,8 +15,6 @@ public class Role {
     @Column(length = 40, nullable = false, unique = true)
     private String name;
 
-//
-
     public Role() {
     }
 

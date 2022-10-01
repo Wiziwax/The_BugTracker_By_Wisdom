@@ -1,5 +1,7 @@
 package com.bugtracker.the_bugtracker.Models;
 
+import com.bugtracker.the_bugtracker.Enums.Action;
+
 import javax.persistence.*;
 import java.time.LocalDate;
 import java.util.Date;
@@ -17,6 +19,8 @@ public class Activity {
     @Column
     public String createdBy;//User who sent the complaint
 
+    @Column(name = "bug_action")
+    public Action action;
 
     @Column
     public LocalDate createdDt;//Date he sent it
@@ -30,9 +34,6 @@ public class Activity {
     public String approvedBy;
 
     @Column
-    public Date approvedDate;
-
-    @Column
     public String assignedTo;
 
     @Column
@@ -41,12 +42,14 @@ public class Activity {
     @Column
     public String progressStatus;
 
-    @Column
-    public String redirectedTo;
+    @Column(name = "reassigned_to")
+    public String reassignedTo;
 
-    @Column
+    @Column(name = "reassignedBy")
+    public String reassignedBy;
+
+    @Column(name = "action_date")
     public Date actionDate;
-
 
 
     public Activity() {
@@ -58,36 +61,25 @@ public class Activity {
 
 
 
-//    @ManyToMany(cascade = {CascadeType.DETACH, CascadeType.MERGE,
-//            CascadeType.REFRESH, CascadeType.PERSIST},
-//            fetch = FetchType.LAZY)
-//    @JoinTable(
-//            name = "bug_activity",
-//            joinColumns = @JoinColumn(name = "activity_bug_id"),
-//            inverseJoinColumns = @JoinColumn(name = "bug_activity_id")
-//    )
-//    private List<Bug> bugActivity;
-
-
 
 
     //GETTERS AND SETTERS
 
     //FOR BUG CREATION
     public Activity(String description, String createdBy, LocalDate createdDt, String approvedBy,
-                    Date approvedDate, String assignedTo, String treatmentStage, String progressStatus) {
+                    Date actionDate, String assignedTo, String treatmentStage, String progressStatus) {
         this.description=description;
         this.createdBy = createdBy;
         this.createdDt = createdDt;
         this.approvedBy = approvedBy;
-        this.approvedDate=approvedDate;
+        this.actionDate=actionDate;
         this.assignedTo=assignedTo;
         this.treatmentStage = treatmentStage;
         this.progressStatus = progressStatus;
     }
 
     //FOR BUG DELETION
-    public Activity(String description, String treatmentStage, Date actionDate, String createdBy) {
+    public Activity(String description, String treatmentStage, Date actionDate) {
         this.description = description;
         this.treatmentStage = treatmentStage;
         this.actionDate = actionDate;
@@ -96,16 +88,35 @@ public class Activity {
     //FOR BUG UPDATE/ASSIGNMENT
 
 
-    public Activity(String createdBy, LocalDate createdDt, String description,
-                    Date approvedDate, String assignedTo, String treatmentStage,
+    public Activity(String createdBy,
+                    LocalDate createdDate,
+                    String description,
+                    String approvedBy,
+                    String assignedTo, String treatmentStage,
                     Date actionDate) {
-        this.createdBy = createdBy;
-        this.createdDt = createdDt;
+
+        this.createdBy=createdBy;
+        this.createdDt=createdDate;
         this.description = description;
-        this.approvedDate = approvedDate;
+        this.actionDate = actionDate;
+        this.approvedBy=approvedBy;
         this.assignedTo = assignedTo;
         this.treatmentStage = treatmentStage;
         this.actionDate = actionDate;
+    }
+
+    //FOR REASSIGNMENT
+
+    public Activity(String createdBy, LocalDate createdDt,
+                    String description,
+                    Date actionDate, String reassignedBy,
+                    String reassignedTo) {
+        this.createdBy = createdBy;
+        this.createdDt = createdDt;
+        this.description = description;
+        this.actionDate = actionDate;
+        this.reassignedBy = reassignedBy;
+        this.reassignedTo = reassignedTo;
     }
 
     public Integer getActivityId() {
@@ -148,14 +159,6 @@ public class Activity {
         this.approvedBy = approvedBy;
     }
 
-    public Date getApprovedDate() {
-        return approvedDate;
-    }
-
-    public void setApprovedDate(Date approvedDate) {
-        this.approvedDate = approvedDate;
-    }
-
     public String getAssignedTo() {
         return assignedTo;
     }
@@ -180,12 +183,29 @@ public class Activity {
         this.progressStatus = progressStatus;
     }
 
-    public String getRedirectedTo() {
-        return redirectedTo;
+    public String getReassignedTo() {
+        return reassignedTo;
     }
 
-    public void setRedirectedTo(String redirectedTo) {
-        this.redirectedTo = redirectedTo;
+    public void setReassignedTo(String reassignedTo) {
+        this.reassignedTo = reassignedTo;
+    }
+
+    public String getReassignedBy() {
+        return reassignedBy;
+    }
+
+    public void setReassignedBy(String reassignedBy) {
+        this.reassignedBy = reassignedBy;
+    }
+
+
+    public Action getAction() {
+        return action;
+    }
+
+    public void setAction(Action action) {
+        this.action = action;
     }
 
     public Date getActionDate() {

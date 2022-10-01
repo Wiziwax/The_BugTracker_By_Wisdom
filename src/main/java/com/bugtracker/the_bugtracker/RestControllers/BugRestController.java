@@ -12,11 +12,11 @@ import com.bugtracker.the_bugtracker.Services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
 
@@ -88,9 +88,11 @@ public class BugRestController {
     }
 
 
+
     //CREATE BUG
     @PostMapping("addbug")
-    public void createBug(@RequestBody Bug bug) {
+    public void createBug(@RequestBody Bug bug, Principal principal) {
+
         bugService.create(bug);
     }
 
@@ -98,9 +100,16 @@ public class BugRestController {
     //UPDATE BUG
     @PostMapping("update")
     public void updateBug(@RequestBody Bug bug) throws UserNotFoundException {
-        bugService.updateBugRestController(bug.getBugId(), bug.getLabel(),
-                bug.getSeverity(), bug.getBugReview(), bug.getBugTreatmentStage(),
-                bug.getPlatformses(), bug.getProgressStatus(), bug.getUserAssignedToBug()
+        bugService.updateBugRestController(
+                bug.getBugId(),
+                bug.getLabel(),
+                bug.getSeverity(),
+                bug.getBugReview(),
+                bug.getBugTreatmentStage(),
+                bug.getPlatformses(),
+                bug.getProgressStatus(),
+                bug.getUserAssignedToBug(),
+                bug.getEnumSeverity()
                 );
 
 

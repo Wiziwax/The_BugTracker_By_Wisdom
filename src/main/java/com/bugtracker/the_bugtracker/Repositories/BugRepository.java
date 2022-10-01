@@ -43,6 +43,8 @@ public interface BugRepository extends JpaRepository<Bug,Integer> {
 
     @Query(nativeQuery = true, value = "SELECT bu.bug_name FROM bug_information bu")
     public List<Bug> justBugs();
+
+
 }
 
 //    @Query(nativeQuery = true, value = "SELECT * FROM bug_information p WHERE CONCAT(p.bug_name, ' ', p.bug_review, ' ', p.bug_treatment_stage, ' ', p.severity, ' ', p.bug_review) LIKE %?1%")

@@ -73,13 +73,10 @@
             <th>Creation Date</th>
             <th>Description</th>
             <th>Assigned To</th>
-            <th>Assigned By</th>
-            <th>Approved Date</th>
+            <th>Approved By</th>
             <th>Reassigned To</th>
             <th>Treatment Stage</th>
             <th>Action Date</th>
-
-
         </tr>
         </thead>
         <tbody>
@@ -90,9 +87,10 @@
             <td th:text="${anActivity.createdDt}" ></td>
             <td th:text="${anActivity.description}"></td>
             <td th:text="${anActivity.assignedTo}"></td>
-            <td th:text="${anActivity.progressStatus}"></td>
+<!--            <td th:text="${anActivity.progressStatus}"></td>-->
             <td th:text="${anActivity.approvedBy}"></td>
-            <td th:text="${anActivity.redirectedTo}"></td>
+
+            <td th:text="${anActivity.reassignedTo}"></td>
             <td th:text="${anActivity.treatmentStage}"></td>
             <td th:text="${anActivity.actionDate}"></td>
 

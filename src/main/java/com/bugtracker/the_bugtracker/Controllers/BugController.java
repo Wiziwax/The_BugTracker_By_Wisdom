@@ -1,13 +1,18 @@
 package com.bugtracker.the_bugtracker.Controllers;
 
+import com.bugtracker.the_bugtracker.Configs.SecurityUser;
 import com.bugtracker.the_bugtracker.Configs.UserNotFoundException;
+import com.bugtracker.the_bugtracker.Enums.Action;
 import com.bugtracker.the_bugtracker.Models.*;
 import com.bugtracker.the_bugtracker.Repositories.ActivityRepository;
+import com.bugtracker.the_bugtracker.Repositories.UserRepository;
 import com.bugtracker.the_bugtracker.Services.ActivityService;
 import com.bugtracker.the_bugtracker.Services.BugService;
 import com.bugtracker.the_bugtracker.Services.PlatformService;
 import com.bugtracker.the_bugtracker.Services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -20,8 +25,12 @@ import java.util.List;
 @RequestMapping("bug")
 public class BugController {
 
+
     @Autowired
     BugService bugService;
+
+    @Autowired
+    UserRepository userRepository;
 
     @Autowired
     UserService userService;
@@ -35,70 +44,49 @@ public class BugController {
     @Autowired
     ActivityRepository activityRepository;
 
-
+    Boolean isUserAssigned;
 
     @GetMapping("")
-    public String displayBugs(Model model){
+    public String displayBugs(Model model) {
         List<Bug> bugs = bugService.bugList();
         model.addAttribute("bugs", bugs);
         return "bugs/list-bugs";
     }
 
-//    @GetMapping("")
-//    public String viewHomePage(Model model) {
-//        return viewPage(model, 1);
-//    }
-//
-//    @GetMapping("page/{pageNum}")
-//    public String viewPage(Model model,
-//                           @PathVariable(name = "pageNum") int pageNum) {
-//
-//        Page<Bug> page = bugService.listAll(pageNum,5);
-//
-//        List<Bug> listBugs = page.getContent();
-//
-//        model.addAttribute("currentPage", pageNum);
-//        model.addAttribute("totalPages", page.getTotalPages());
-//        model.addAttribute("totalItems", page.getTotalElements());
-//        model.addAttribute("listBugs", listBugs);
-//
-//        return "bugs/list-bugs";
-//    }
+
+    @GetMapping("/username")
+    @ResponseBody
+    public String currentUserName(Authentication authentication) {
+        return authentication.getName();
+    }
 
 
-//    @GetMapping("assignmenttable")
-//    public String displayAssignmentTable(Model model){
-//        List<Bug> bugs = bugService.bugList();
-//        model.addAttribute("bugs", bugs);
-//        return "bugs/bugassignmenttable";
-//    }
-
-
-    @GetMapping("new")
-    public String newBugForm(Model model){
-        Bug aBug=new Bug();
-        List<Platforms>allPlatforms = platformService.platformsList();//Create API
+    @GetMapping("/new")
+    public String newBugForm(Model model) {
+        Bug aBug = new Bug();
+        List<Platforms> allPlatforms = platformService.platformsList();//Create API
         model.addAttribute("allPlatforms", allPlatforms);
         model.addAttribute("bug", aBug);
         return "bugs/new-bugs";
     }
 
-    @PostMapping("save")
-    public String createBug(Bug bug, Activity activity, Model model){
+    @PostMapping("/save")
+    public String createBug(Bug bug, @AuthenticationPrincipal SecurityUser userDetails){
+        String userEmail=userDetails.getUsername();
+        User user = userRepository.getByEmail(userEmail);
+        isUserAssigned = false;
+        final String createdBy = user.getFirstName()+ " " + user.getLastName();
+        bug.setCreatedBy(createdBy);
         bugService.create(bug);
-
         return "redirect:/bug/";
     }
 
-    @GetMapping("edit/{id}")
+
+    @GetMapping("/edit/{id}")
     public String editBug(@PathVariable Integer id, Model model) throws UserNotFoundException {
         Bug existingBug = bugService.get(id);
         List<Platforms> platformsList = platformService.platformsList();
         List<User> listUserByRole = userService.getUserByRoleId(2);
-
-
-        System.out.println(listUserByRole);
-        System.out.println(platformsList);
         model.addAttribute("developers", listUserByRole);
         model.addAttribute("allPlatforms", platformsList);
         model.addAttribute("bug", existingBug);
@@ -107,8 +95,10 @@ public class BugController {
 
     @PostMapping("{id}")
     public String updateBug(@PathVariable Integer id,
-                                 @ModelAttribute("bug") Bug bug,
-                                 Model model) throws UserNotFoundException {
+                            @ModelAttribute("bug") Bug bug,
+                            @AuthenticationPrincipal SecurityUser userDetails) throws UserNotFoundException {
+
+
         Bug existingBug = bugService.get(id);
         existingBug.setLabel(bug.getLabel());
         existingBug.setSeverity(bug.getSeverity());
@@ -117,29 +107,75 @@ public class BugController {
         existingBug.setLastUpdate(LocalDate.now());
         existingBug.setPlatformses(bug.getPlatformses());
         existingBug.setProgressStatus(bug.getProgressStatus());
-        existingBug.setUserAssignedToBug(bug.getUserAssignedToBug());
         existingBug.setAssignedDate(String.valueOf(LocalDate.now()));
-        String assignedTo= String.valueOf(existingBug.getUserAssignedToBug());
-
-        Activity editActivity= new Activity(
-                existingBug.getLabel(),
-                existingBug.getReportDate(),
-                String.format("Bug %s created by %s was assigned to %s ", existingBug.getBugReview(), existingBug.getLabel(), existingBug.userAssignedToBug),
-                new Date(),
-                assignedTo,
-                existingBug.getBugTreatmentStage(),
-                new Date()
-                );
-
+        System.out.println("isUserAssigned for normal edition " + isUserAssigned);
+        existingBug.setUserAssignedToBug(assignmentResolution(bug, userDetails));
         bugService.updateBug(existingBug);
-        activityRepository.save(editActivity);
-
         return "redirect:/bug/";
     }
+
 
     @GetMapping("/delete/{id}")
     public String deleteBug(@PathVariable Integer id) throws UserNotFoundException {
         bugService.deleteBug(id);
         return "redirect:/bug";
     }
+
+
+
+    ///////////////////////////////////CONTROLLER UTILITY METHODS/////////////////////////////////// /
+
+      public User assignmentResolution(Bug bug, SecurityUser userDetails) {
+        User assignedUser;
+        if (isUserAssigned==false) {
+            assignedUser = bugAssignment(bug, userDetails);
+            System.out.println("isUserAssigned for Assignment= "+ isUserAssigned);
+            isUserAssigned=true;
+        } else {
+            System.out.println("isUserAssigned for reassignment = "+ true);
+            assignedUser = bugReassignment(bug, userDetails);
+        }
+        return assignedUser;
+    }
+    public User bugReassignment(Bug bug, SecurityUser userDetails) {
+
+        String userEmail=userDetails.getUsername();
+        User user = userRepository.getByEmail(userEmail);
+        bug.setUserAssignedToBug(bug.getUserAssignedToBug());
+        Activity reassignmentActivity = new Activity(
+                bug.getCreatedBy(),
+                bug.getReportDate(),
+                String.format("Bug %s created by %s was reassigned to %s ", bug.getLabel(), bug.getCreatedBy(), bug.userAssignedToBug),
+                new Date(),
+                user.getFirstName()+ " " + user.getLastName(),
+                String.valueOf(bug.userAssignedToBug)
+        );
+        reassignmentActivity.setAction(Action.BUG_REASSIGNMENT);
+        activityRepository.save(reassignmentActivity);
+
+        return bug.getUserAssignedToBug();
+    }
+
+    public User bugAssignment(Bug bug, SecurityUser userDetails) {
+
+        String userEmail=userDetails.getUsername();
+        User user = userRepository.getByEmail(userEmail);
+
+        bug.setUserAssignedToBug(bug.getUserAssignedToBug());
+        String assignedTo = String.valueOf(bug.getUserAssignedToBug());
+        Activity assignmentActivity = new Activity(
+                bug.getCreatedBy(),
+                bug.getReportDate(),
+                String.format("Bug %s created by %s was assigned to %s ", bug.getLabel(), bug.getCreatedBy(), bug.userAssignedToBug),
+                user.getFirstName()+ " " + user.getLastName(),
+                assignedTo,
+                bug.getBugTreatmentStage(),
+                new Date()
+        );
+        assignmentActivity.setAction(Action.BUG_ASSIGNMENT);
+        activityRepository.save(assignmentActivity);
+        return bug.getUserAssignedToBug();
+    }
+
+
 }

@@ -1,5 +1,7 @@
 package com.bugtracker.the_bugtracker.Models;
 
+import com.bugtracker.the_bugtracker.Enums.PlatformStatus;
+
 import javax.persistence.*;
 import java.util.List;
 
@@ -12,6 +14,10 @@ public class Platforms {
     private Integer platformId;
 
     private String platformName;
+
+
+    private PlatformStatus platformStatus;
+
 
     public Platforms() {
     }
@@ -36,18 +42,13 @@ public class Platforms {
         this.platformName = platformName;
     }
 
-//    @ManyToMany(cascade = {CascadeType.DETACH, CascadeType.MERGE,
-//            CascadeType.REFRESH, CascadeType.PERSIST},
-//            fetch = FetchType.LAZY)
-//    @JoinTable(
-//            name = "platforms_bugs",
-//            joinColumns = @JoinColumn(name = "platform_id"),
-//            inverseJoinColumns = @JoinColumn(name = "bug_id")
-//    )    private List<Bug> bugses;
+    public PlatformStatus getPlatformStatus() {
+        return platformStatus;
+    }
 
-
-//    @OneToMany(mappedBy = "platformses")
-//    private List<Bug> bugs;
+    public void setPlatformStatus(PlatformStatus platformStatus) {
+        this.platformStatus = platformStatus;
+    }
 
     @Override
     public String toString(){
