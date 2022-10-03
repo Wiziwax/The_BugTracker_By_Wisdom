@@ -24,7 +24,7 @@ public class ActivityRestController {
     BugService bugService;
 
     @GetMapping("")
-    public List<Activity> displayActivities(Model model) throws UserNotFoundException {
+    public List<Activity> displayActivities(){
         return activityService.findAllActivities();
     }
 

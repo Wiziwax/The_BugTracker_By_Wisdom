@@ -81,6 +81,7 @@ public class Bug {
 //    private Platforms platformses;
     @Column
     private String bugReview; //USERS REVIEW ON BUG TREATMENT
+
     @OneToOne
     @JoinColumn(name = "bug_platform_id")
     private Platforms platformses;

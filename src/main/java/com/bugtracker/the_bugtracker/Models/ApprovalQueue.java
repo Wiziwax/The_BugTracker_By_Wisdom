@@ -23,11 +23,16 @@ public class ApprovalQueue {
     @Column
     private Date dateOfApproval;
 
-    @Column
+
     private boolean isApproved;
 
     @Column
     private String reassigningTo;
+
+
+    @OneToOne
+    @JoinColumn(name = "bug_approval")
+    private Bug bugApprovalRelationship;
 
 
     public ApprovalQueue(Date dateOfSubmission, String actionToBeApproved,
@@ -38,6 +43,7 @@ public class ApprovalQueue {
         this.submittedBy = submittedBy;
         this.isApproved = isApproved;
         this.reassigningTo = reassigningTo;
+
     }
 
     public ApprovalQueue() {
@@ -90,7 +96,7 @@ public class ApprovalQueue {
     }
 
     public void setApproved(boolean approved) {
-        isApproved = approved;
+        this.isApproved = approved;
     }
 
     public String getReassigningTo() {
@@ -99,5 +105,14 @@ public class ApprovalQueue {
 
     public void setReassigningTo(String reassigningTo) {
         this.reassigningTo = reassigningTo;
+    }
+
+
+    public Bug getBugApprovalRelationship() {
+        return bugApprovalRelationship;
+    }
+
+    public void setBugApprovalRelationship(Bug bugApprovalRelationship) {
+        this.bugApprovalRelationship = bugApprovalRelationship;
     }
 }

@@ -149,7 +149,9 @@ public class BugController {
             ApprovalQueue reassignmentApprovalQueue = new ApprovalQueue(new Date(), "REASSIGNMENT",
                     userFullName, false, String.format("%s", bug.userAssignedToBug));
 
+            reassignmentApprovalQueue.setBugApprovalRelationship(existingBug);
             approvalQueueRepository.save(reassignmentApprovalQueue);
+
         }
 
 
