@@ -59,12 +59,25 @@ public class SecurityUser implements UserDetails {
         return true;
     }
 
+
     public String getFullName(){
         return this.user.getFirstName()+ " " + this.user.getLastName();
     }
 
     public Integer getUsersId(){
         return user.getId();
+    }
+
+    public String getFirstName(){
+        return this.user.getFirstName();
+    }
+
+    public String getLastName(){
+        return this.user.getLastName();
+    }
+
+    public String getRole(){
+        return this.user.getRoles().getName();
     }
 
 }

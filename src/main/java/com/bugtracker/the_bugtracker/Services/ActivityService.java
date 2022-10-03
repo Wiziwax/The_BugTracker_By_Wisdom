@@ -35,4 +35,13 @@ public class ActivityService {
         }
     }
 
+    public List<Activity> getActivityByBugId(int bugId){
+        return activityRepository.activityOwningBug(bugId);
+    }
+
+
+    public List<Activity> activityFilterByAction(int bugActionId){
+        return activityRepository.activityFilterByAction(bugActionId);
+    }
+
 }

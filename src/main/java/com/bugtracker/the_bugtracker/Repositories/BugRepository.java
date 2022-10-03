@@ -2,12 +2,10 @@ package com.bugtracker.the_bugtracker.Repositories;
 
 import com.bugtracker.the_bugtracker.DTO.ChartData;
 import com.bugtracker.the_bugtracker.Models.Bug;
-import com.bugtracker.the_bugtracker.Models.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.web.bind.annotation.CrossOrigin;
 
@@ -38,8 +36,10 @@ public interface BugRepository extends JpaRepository<Bug,Integer> {
     @Query(nativeQuery = true, value = "SELECT * FROM bug_information bu WHERE bu.user_bug_id=:userId")
     public List<Bug> theAssignedBugs(int userId);
 
+
     @Query(nativeQuery = true, value = "SELECT * FROM bug_information p WHERE p.severity LIKE %?1%")
     public Page<Bug> search(String keyword, Pageable pageable);
+
 
     @Query(nativeQuery = true, value = "SELECT bu.bug_name FROM bug_information bu")
     public List<Bug> justBugs();

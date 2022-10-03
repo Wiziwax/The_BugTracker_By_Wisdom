@@ -34,6 +34,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
         //CUSTOM CONFIGURATION
         http
+                .httpBasic()
+                .and()
                 .authorizeRequests()
                 .antMatchers("/activity/**").hasAnyAuthority("Admin", "Developer")
                 .antMatchers("/bug/**").hasAnyAuthority("Admin",  "Developer", "User")

@@ -5,6 +5,7 @@ import com.bugtracker.the_bugtracker.Configs.UserNotFoundException;
 import com.bugtracker.the_bugtracker.Enums.Action;
 import com.bugtracker.the_bugtracker.Models.*;
 import com.bugtracker.the_bugtracker.Repositories.ActivityRepository;
+import com.bugtracker.the_bugtracker.Repositories.ApprovalQueueRepository;
 import com.bugtracker.the_bugtracker.Repositories.UserRepository;
 import com.bugtracker.the_bugtracker.Services.ActivityService;
 import com.bugtracker.the_bugtracker.Services.BugService;
@@ -42,9 +43,12 @@ public class BugController {
     ActivityService activityService;
 
     @Autowired
+    ApprovalQueueRepository approvalQueueRepository;
+
+    @Autowired
     ActivityRepository activityRepository;
 
-    Boolean isUserAssigned;
+    Boolean isUserAssigned = false;
 
     @GetMapping("")
     public String displayBugs(Model model) {
@@ -72,11 +76,12 @@ public class BugController {
 
     @PostMapping("/save")
     public String createBug(Bug bug, @AuthenticationPrincipal SecurityUser userDetails){
+
+
         String userEmail=userDetails.getUsername();
         User user = userRepository.getByEmail(userEmail);
-        isUserAssigned = false;
-        final String createdBy = user.getFirstName()+ " " + user.getLastName();
-        bug.setCreatedBy(createdBy);
+        isUserAssigned=false;
+        bug.setCreatedBy(user.getFirstName()+ " " + user.getLastName());
         bugService.create(bug);
         return "redirect:/bug/";
     }
@@ -109,7 +114,7 @@ public class BugController {
         existingBug.setProgressStatus(bug.getProgressStatus());
         existingBug.setAssignedDate(String.valueOf(LocalDate.now()));
         System.out.println("isUserAssigned for normal edition " + isUserAssigned);
-        existingBug.setUserAssignedToBug(assignmentResolution(bug, userDetails));
+        existingBug.setUserAssignedToBug(assignmentResolution(bug, existingBug, userDetails));
         bugService.updateBug(existingBug);
         return "redirect:/bug/";
     }
@@ -123,58 +128,88 @@ public class BugController {
 
 
 
-    ///////////////////////////////////CONTROLLER UTILITY METHODS/////////////////////////////////// /
+    ///////////////////////////////////CONTROLLER UTILITY METHODS/////////////////////////////////////////
 
-      public User assignmentResolution(Bug bug, SecurityUser userDetails) {
-        User assignedUser;
-        if (isUserAssigned==false) {
-            assignedUser = bugAssignment(bug, userDetails);
+    public User assignmentResolution(Bug bug, Bug existingBug, SecurityUser userDetails) {
+        User assignedUser = null;
+        String userFullName = userDetails.getFullName();
+        if (isUserAssigned==false ) {
+            assignedUser = bugAssignment(bug, existingBug, userDetails);
             System.out.println("isUserAssigned for Assignment= "+ isUserAssigned);
             isUserAssigned=true;
-        } else {
+        } else if(isUserAssigned==true && bug.getApprovedForReassignment()==true){
             System.out.println("isUserAssigned for reassignment = "+ true);
-            assignedUser = bugReassignment(bug, userDetails);
+            assignedUser = bugReassignment(bug, existingBug, userDetails);
         }
+
+        else if(isUserAssigned==true && bug.getApprovedForReassignment()==false){
+            System.out.println(bug.getApprovedForReassignment());
+            System.out.println("Sent to admin for approval");
+
+            ApprovalQueue reassignmentApprovalQueue = new ApprovalQueue(new Date(), "REASSIGNMENT",
+                    userFullName, false, String.format("%s", bug.userAssignedToBug));
+
+            approvalQueueRepository.save(reassignmentApprovalQueue);
+        }
+
+
         return assignedUser;
     }
-    public User bugReassignment(Bug bug, SecurityUser userDetails) {
+    public User bugReassignment(Bug bug, Bug existingBug, SecurityUser userDetails) {
 
-        String userEmail=userDetails.getUsername();
-        User user = userRepository.getByEmail(userEmail);
+        String userFullName = userDetails.getFullName();
+
+
         bug.setUserAssignedToBug(bug.getUserAssignedToBug());
         Activity reassignmentActivity = new Activity(
-                bug.getCreatedBy(),
+                existingBug.getCreatedBy(),
                 bug.getReportDate(),
-                String.format("Bug %s created by %s was reassigned to %s ", bug.getLabel(), bug.getCreatedBy(), bug.userAssignedToBug),
+                "Initially assigned to " + existingBug.userAssignedToBug,
+                String.format("Bug %s created by %s was reassigned to %s ", bug.getLabel(), existingBug.getCreatedBy(), bug.userAssignedToBug),
                 new Date(),
-                user.getFirstName()+ " " + user.getLastName(),
+                userFullName,
                 String.valueOf(bug.userAssignedToBug)
         );
+        reassignmentActivity.setBugActivity(existingBug);
         reassignmentActivity.setAction(Action.BUG_REASSIGNMENT);
         activityRepository.save(reassignmentActivity);
 
         return bug.getUserAssignedToBug();
     }
 
-    public User bugAssignment(Bug bug, SecurityUser userDetails) {
+    public User bugAssignment(Bug bug, Bug existingBug,  SecurityUser userDetails) {
 
-        String userEmail=userDetails.getUsername();
-        User user = userRepository.getByEmail(userEmail);
+        String userFullName=userDetails.getFullName();
 
         bug.setUserAssignedToBug(bug.getUserAssignedToBug());
         String assignedTo = String.valueOf(bug.getUserAssignedToBug());
         Activity assignmentActivity = new Activity(
-                bug.getCreatedBy(),
+                existingBug.getCreatedBy(),
                 bug.getReportDate(),
-                String.format("Bug %s created by %s was assigned to %s ", bug.getLabel(), bug.getCreatedBy(), bug.userAssignedToBug),
-                user.getFirstName()+ " " + user.getLastName(),
+                null,
+                String.format("Bug %s created by %s was assigned to %s ",
+                        bug.getLabel(), existingBug.getCreatedBy(), bug.userAssignedToBug),
+                userFullName,
                 assignedTo,
                 bug.getBugTreatmentStage(),
                 new Date()
         );
+        assignmentActivity.setBugActivity(existingBug);
         assignmentActivity.setAction(Action.BUG_ASSIGNMENT);
         activityRepository.save(assignmentActivity);
         return bug.getUserAssignedToBug();
+    }
+
+
+    @GetMapping("activityonbug/{id}")
+    public String myDashboard(@PathVariable Integer id,
+                              @ModelAttribute("bug") Bug bug,
+                              Model model)  {
+
+        List<Activity> listOfActivitiesCarriedOutOnBug = activityService.getActivityByBugId(id);
+        System.out.println(listOfActivitiesCarriedOutOnBug);
+        model.addAttribute("bugactivitylist", listOfActivitiesCarriedOutOnBug);
+        return "/bugs/bug_activity_table";
     }
 
 

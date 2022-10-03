@@ -1,6 +1,7 @@
 package com.bugtracker.the_bugtracker.Models;
 
 import com.bugtracker.the_bugtracker.Enums.Severity;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -20,20 +21,18 @@ public class Bug {
     @Column
     @CreatedDate
     @DateTimeFormat(pattern = "dd-mm-yyyy")
+    @JsonIgnore
     public final LocalDate reportDate = LocalDate.now(); //DATE OF REPORT
     @Column
     public String assignedTo;
     @Column
     @CreatedDate
+    @JsonIgnore
     public LocalDate lastUpdate;
     @OneToOne
     @JoinColumn(name = "user_bug_id")
+    @JsonIgnore
     public User userAssignedToBug;
-
-    @OneToOne
-    @JoinColumn(name = "activity_bug_id")
-    public Activity bugActivity;
-
     @Id
     @Column(name = "bug_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -43,28 +42,48 @@ public class Bug {
     @Column(name = "created_by")
     private String createdBy;
     @Column(name = "approved_by")
+    @JsonIgnore
     private String approvedBy;
     @Column
+    @JsonIgnore
     private Date approvedDate;
     @Column
+    @JsonIgnore
     private String assignedDate;
     @Column
     private String severity; //SEVERITY LEVEL
     @Column
     private Severity enumSeverity;
 
+    @Column
+    private Boolean isApprovedForReassignment=false;
+
+    @Column
+    private final String ticketId = String.format("ZBN%s%s", new Date() , bugId);
 
     @Column
     private String bugTreatmentStage; //ALL BUGS, OPEN BUGS, TREATED, PENDING
     @Column
     private String progressStatus;//INITIATED, APPROVED, ASSIGNED TO, REASSIGNED TO, CORRECTION COMPLETED
 
+    //    @ManyToMany(cascade = {CascadeType.DETACH, CascadeType.MERGE,
+//            CascadeType.REFRESH, CascadeType.PERSIST},
+//            fetch = FetchType.LAZY)
+//    @JoinTable(
+//            name = "platforms_bugs",
+//            joinColumns = @JoinColumn(name = "bug_id"),
+//            inverseJoinColumns = @JoinColumn(name = "platform_id")
+//    )
+//    private List<Platforms> platformses;
+//
+//    @ManyToOne
+//    @JoinColumn(name = "bug_platform_id")
+//    private Platforms platformses;
     @Column
     private String bugReview; //USERS REVIEW ON BUG TREATMENT
     @OneToOne
     @JoinColumn(name = "bug_platform_id")
     private Platforms platformses;
-
 
 
 //    @ManyToMany(cascade = {CascadeType.DETACH, CascadeType.MERGE,
@@ -132,12 +151,7 @@ public class Bug {
         this.platformses = platformses;
     }
 
-    @Override
-    public String toString() {
-        return "Bug{" + "bugId=" + bugId + ", bugName='" + label + '\'' + ", createdBy='" + createdBy + '\'' + ", approvedBy='" + approvedBy + '\'' + ", approvedDate=" + approvedDate + ", assignedTo='" + assignedTo + '\'' + ", assignedDate='" + assignedDate + '\'' + ", reportDate=" + reportDate + ", lastUpdate=" + lastUpdate + ", severity='" + severity + '\'' + ", bugTreatmentStage='" + bugTreatmentStage + '\'' + ", progressStatus='" + progressStatus + '\'' + ", bugReview='" + bugReview + '\'' + '}';
-    }
-
-//   
+    //
 
     public Integer getBugId() {
         return bugId;
@@ -285,5 +299,20 @@ public class Bug {
         this.enumSeverity = enumSeverity;
     }
 
+    @Override
+    public String toString() {
+        return label;
+    }
 
+    public String getTicketId() {
+        return ticketId;
+    }
+
+    public Boolean getApprovedForReassignment() {
+        return isApprovedForReassignment;
+    }
+
+    public void setApprovedForReassignment(Boolean approvedForReassignment) {
+        isApprovedForReassignment = approvedForReassignment;
+    }
 }

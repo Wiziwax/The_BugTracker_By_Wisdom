@@ -63,7 +63,7 @@ public class BugRestController {
 
     //SEARCH FILTER
     @GetMapping("search")
-    public Page<Bug> viewHomePage( @RequestParam(name = "keyword", required = false) String keyword, Pageable pageable) {
+    public Page<Bug> viewHomePage(@RequestParam(name = "keyword", required = false) String keyword, Pageable pageable) {
         return bugService.listAllSearches(keyword, pageable);
     }
 

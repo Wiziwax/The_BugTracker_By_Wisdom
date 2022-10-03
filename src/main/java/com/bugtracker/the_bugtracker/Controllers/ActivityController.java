@@ -3,6 +3,7 @@ package com.bugtracker.the_bugtracker.Controllers;
 import com.bugtracker.the_bugtracker.Configs.UserNotFoundException;
 import com.bugtracker.the_bugtracker.Models.Activity;
 import com.bugtracker.the_bugtracker.Models.Bug;
+import com.bugtracker.the_bugtracker.Models.User;
 import com.bugtracker.the_bugtracker.Services.ActivityService;
 import com.bugtracker.the_bugtracker.Services.BugService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +35,9 @@ public class ActivityController {
         model.addAttribute("bugActivityList", bugActivityList);
         return "activity/activity_list";
     }
+
+
+
 
 
 }

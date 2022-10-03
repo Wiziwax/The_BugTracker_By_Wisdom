@@ -91,7 +91,14 @@
         <tr th:each="aBug : ${bugs}">
 
             <td th:text="${aBug.bugId}"></td>
-            <td th:text="${aBug.label}"></td>
+            <td>
+            <a th:text="${aBug.label}"
+               th:href="@{/bug/activityonbug/{id}(id=${aBug.bugId})}">
+            </a>
+
+
+            </td>
+
             <td th:text="${aBug.bugReview}" ></td>
             <td th:text="${aBug.reportDate}"></td>
             <td th:text="${aBug.platformses}"></td>

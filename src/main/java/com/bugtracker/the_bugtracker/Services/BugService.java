@@ -89,9 +89,11 @@ public class BugService {
                 buggy.getApprovedBy(),
                 buggy.getApprovedDate(),
                 buggy.getAssignedTo(),
+                buggy.getTicketId(),
                 buggy.getBugTreatmentStage(),
                 buggy.getProgressStatus());
 
+        activity.setBugActivity(buggy);
         activity.setAction(Action.BUG_CREATION);
         buggy.setEnumSeverity(Severity.LOW);
         activityRepository.save(activity);
@@ -132,7 +134,7 @@ public class BugService {
                 ("Bug with Id %d with description %s initiated by %s, deleted", id ,bug.getBugReview(), bug.getCreatedBy()),
                 "DELETED",
                 new Date());
-
+        deleteActivity.setBugActivity(bug);
         deleteActivity.setAction(Action.BUG_DELETION);
         activityRepository.save(deleteActivity);
     }

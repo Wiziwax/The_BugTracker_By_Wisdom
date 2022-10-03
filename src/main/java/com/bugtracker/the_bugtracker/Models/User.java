@@ -175,20 +175,18 @@ public class User {
         this.firstName = firstName;
         this.lastName = lastName;
     }
-//    }
+
 
 
     public User(String email, String password, String firstName,
-                String lastName, String photos, boolean enabled,
-                Bug bugForUser, Role userRoles) {
+                String lastName, String photos, boolean enabled) {
         this.email = email;
         this.password = password;
         this.firstName = firstName;
         this.lastName = lastName;
         this.photos = photos;
         this.enabled = enabled;
-//        this.bugForUser = bugForUser;
-//        this.userRoles = userRoles;
+
     }
 
     @Override

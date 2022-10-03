@@ -7,6 +7,7 @@ import com.bugtracker.the_bugtracker.Services.BugService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -25,5 +26,10 @@ public class ActivityRestController {
     @GetMapping("")
     public List<Activity> displayActivities(Model model) throws UserNotFoundException {
         return activityService.findAllActivities();
+    }
+
+    @GetMapping("activityfilter/{id}")
+    public List<Activity> activitiesFilter(@PathVariable Integer id) {
+        return activityService.activityFilterByAction(id);
     }
 }

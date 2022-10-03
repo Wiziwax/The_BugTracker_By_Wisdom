@@ -1,6 +1,7 @@
 package com.bugtracker.the_bugtracker.Models;
 
 import com.bugtracker.the_bugtracker.Enums.Action;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import javax.persistence.*;
 import java.time.LocalDate;
@@ -40,6 +41,9 @@ public class Activity {
     public String treatmentStage;
 
     @Column
+    public String bugTicketId;
+
+    @Column
     public String progressStatus;
 
     @Column(name = "reassigned_to")
@@ -51,6 +55,10 @@ public class Activity {
     @Column(name = "action_date")
     public Date actionDate;
 
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "activity_bug_id")
+    @JsonIgnore
+    public Bug bugActivity;
 
     public Activity() {
     }
@@ -67,13 +75,14 @@ public class Activity {
 
     //FOR BUG CREATION
     public Activity(String description, String createdBy, LocalDate createdDt, String approvedBy,
-                    Date actionDate, String assignedTo, String treatmentStage, String progressStatus) {
+                    Date actionDate, String assignedTo, String bugTicketId, String treatmentStage, String progressStatus) {
         this.description=description;
         this.createdBy = createdBy;
         this.createdDt = createdDt;
         this.approvedBy = approvedBy;
         this.actionDate=actionDate;
         this.assignedTo=assignedTo;
+        this.bugTicketId = bugTicketId;
         this.treatmentStage = treatmentStage;
         this.progressStatus = progressStatus;
     }
@@ -81,6 +90,7 @@ public class Activity {
     //FOR BUG DELETION
     public Activity(String description, String treatmentStage, Date actionDate) {
         this.description = description;
+
         this.treatmentStage = treatmentStage;
         this.actionDate = actionDate;
     }
@@ -90,6 +100,7 @@ public class Activity {
 
     public Activity(String createdBy,
                     LocalDate createdDate,
+                    String reassignedTo,
                     String description,
                     String approvedBy,
                     String assignedTo, String treatmentStage,
@@ -97,8 +108,8 @@ public class Activity {
 
         this.createdBy=createdBy;
         this.createdDt=createdDate;
+        this.reassignedTo=reassignedTo;
         this.description = description;
-        this.actionDate = actionDate;
         this.approvedBy=approvedBy;
         this.assignedTo = assignedTo;
         this.treatmentStage = treatmentStage;
@@ -108,11 +119,12 @@ public class Activity {
     //FOR REASSIGNMENT
 
     public Activity(String createdBy, LocalDate createdDt,
-                    String description,
+                    String assignedTo, String description,
                     Date actionDate, String reassignedBy,
                     String reassignedTo) {
         this.createdBy = createdBy;
         this.createdDt = createdDt;
+        this.assignedTo=assignedTo;
         this.description = description;
         this.actionDate = actionDate;
         this.reassignedBy = reassignedBy;
@@ -214,5 +226,21 @@ public class Activity {
 
     public void setActionDate(Date actionDate) {
         this.actionDate = actionDate;
+    }
+
+
+    public Bug getBugActivity() {
+        return bugActivity;
+    }
+
+    public void setBugActivity(Bug bugActivity) {
+        this.bugActivity = bugActivity;
+    }
+
+    @Override
+    public String toString() {
+        return "Activity{" +
+                "bugActivity=" + bugActivity +
+                '}';
     }
 }
